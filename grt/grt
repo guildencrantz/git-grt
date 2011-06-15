@@ -1,0 +1,143 @@
+#!/bin/sh
+
+# This trick helps get around problem systems where
+# the shebang isn't interpreted, or where paths are non-standard
+# As long as python is in the path, and a bourne compatible
+# shell is executing this (or python is executing it directly) this should work.
+
+magic='--calling-python-from-/bin/sh--'
+"""exec" python -E "$0" "$@" """#$magic"
+if __name__ == '__main__':
+    import sys
+    if sys.argv[-1] == '#%s' % magic:
+        del sys.argv[-1]
+del magic
+
+import argparse
+import ConfigParser
+import inspect
+import os
+import sys
+import grt.commands # This is actually a used import (otherwise sys.modules['grt.commands'] calls won't work)
+# GitPython
+from git.config import GitConfigParser
+from git import Repo
+from git.exc import InvalidGitRepositoryError
+
+__author__ = 'mhenkel@returnpath.net'
+
+def GetCommands():
+    # This is pretty hacky, but I can't find a clean way to inspect the members of a namespace.
+    commands = {}
+    for file in os.listdir(sys.modules['grt.commands'].__path__[0]):
+        if not file.startswith('__') and file.endswith('.py'):
+            moduleName = file[:-3]
+            modulePath = 'grt.commands.'+moduleName
+            __import__(modulePath)
+            module = sys.modules[modulePath]
+            command = FindCommand(module)
+            if command:
+                commands[moduleName] = command.Description
+    longestModuleName = len(max(commands, key=len))
+    # pretty print the commands and their descriptions in two even columns
+    return "\n     ".join(map(lambda x: "%s     %s" % (x.ljust(longestModuleName), commands[x]), commands))
+
+def FindCommand(module):
+    for null, classObj in inspect.getmembers(module, inspect.isclass):
+        if classObj.__module__.startswith('grt.commands.'): # Only look in the commands namespace, not imported namespaces
+            for null, method in inspect.getmembers(classObj, inspect.ismethod):
+                if method.__name__ == 'Do': # Make sure the class contains a Do method
+                    return classObj
+
+def DoCommand(config, commandName, commandArgs):
+    commandName = commandName.replace('-', '_')
+    modulePath = 'grt.commands.'+commandName
+    __import__(modulePath)
+    module = sys.modules[modulePath]
+    command = FindCommand(module)
+    result = command(config).Do(commandArgs)
+    if result is not None:
+        print ''.join(result)
+
+# TODO: Should this be classified?
+def LoadConfig(configPath=None, read_only=True):
+    if configPath is None:
+        repo = CurrentRepository()
+        if repo is not None:
+            if read_only:
+                config = repo.config_reader()
+            else:
+                config = repo.config_writer()
+        else:
+            system_config = '/etc/gitconfig'
+            global_config = os.path.expanduser('~/.gitconfig')
+            config = GitConfigParser([system_config, global_config], read_only)
+            # TODO: What if there's nothing there?
+    elif not os.path.isfile(configPath):
+        createConfig = raw_input('No config file exists at %s, should one be created [Y/n]? ' % configPath)
+        if createConfig in 'Yy' or len(createConfig) == 0:
+            config = CreateConfig(configPath)
+        else:
+            config = LoadConfig(None, read_only)
+    else:
+        config = GitConfigParser(configPath, read_only)
+    config.read()
+    return config
+
+def CreateConfig(configPath):
+    config = ConfigParser.ConfigParser()
+    config.add_section("gerrit")
+    # FIXME: Add validation
+    # FIXME: Add support for username
+    # Honestly all this raw_input stuff should probably be in a function with input validation
+    host = raw_input('Enter the name of the gerrit host: ')
+    config.set("gerrit", "host", host)
+    port = raw_input('Enter the ssh port for gerrit on %s [29418]: ' % host)
+    port = 29418 if len(port) == 0 else port
+    config.set("gerrit", "ssh-port", port)
+    config.write(open(configPath, 'wb'))
+    return config
+
+def CurrentRepository():
+    try:
+        return Repo('.')
+    except InvalidGitRepositoryError:
+        return None
+
+def main():
+    parser = argparse.ArgumentParser(description='Manipulate gerrit hosted git repositories.', formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        '--config',
+        help='Path to a config file (overrides the .git/config in the current repository, as well as ~/.gitconfig)'
+    )
+    parser.add_argument(
+        'command',
+        # See if I can print the commands here.
+        help="The command to execute; either a git standard command, or one of:\n     " + GetCommands()
+    )
+    parser.add_argument(
+        'command_args',
+        nargs='*',
+        help='arguments to pass to command'
+    )
+    args = parser.parse_args()
+
+    config = LoadConfig() if args.config is None else LoadConfig(args.config)
+
+    try:
+        DoCommand(config, args.command, args.command_args)
+    except ImportError as e:
+        if e.message.startswith('No module named '):
+            # FIXME: Can I get GitPython to do this? How do I dynamically go from variable string to method object?
+            gitCommand = ['git', args.command]
+            gitCommand.extend(args.command_args)
+            from subprocess import check_output
+            print check_output(gitCommand)
+        else:
+            raise e
+
+if __name__ == '__main__':
+    main()
+
+
+# vim: ts=4 sw=4 sts=4 et ai ft=python :
