@@ -68,3 +68,17 @@ func main() {
 		break
 	}
 }
+
+func _get_current_branch() string {
+	cmd := exec.Command("git", "symbolic-ref", "--short", "HEAD")
+
+	var usrout bytes.Buffer
+	cmd.Stdout = &usrout
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	out := strings.TrimSpace(usrout.String())
+
+	return out
+}
