@@ -3,11 +3,12 @@ package main
 import (
     "bytes"
     "fmt"
+    "io/ioutil"
     "log"
+    "net/http"
     "os"
     "os/exec"
     "strings"
-    "github.com/davemeehan/Neo4j-GO"
 )
 
 func getCreds() (string,string) {
@@ -34,25 +35,36 @@ func getCreds() (string,string) {
 
 func main() {
     // Fail if not enough parameters
-    if(len(os.Args) < 2) {
-        log.Printf("I don't know what you want me to do.")
-        return
+    if len(os.Args) < 2 {
+        log.Fatal("I don't know what you want me to do.")
     }
 
     user, pass := getCreds()
 
-    neo, err := neo4j.NewNeo4j("http://gerrit.dev.returnpath.net/a/changes", user, pass)
+    var client http.Client
+
+    resp, err := client.Get("http://gerrit.dev.returnpath.net/a/changes/?q=status:open")
     if err != nil {
-        // log.Printf("%v\n", err)
-        return
+        log.Fatal(err)
     }
 
-    node := map[string]string{
-        "q": "status:open",
+    req, err := http.NewRequest("GET", "http://gerrit.dev.returnpath.net/a/changes/?q=status:open", nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    req.SetBasicAuth(user, pass)
+
+    resp, err = client.Do(req)
+
+    defer resp.Body.Close()
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        log.Fatal(err)
     }
 
-    data, _ := neo.CreateNode(node)
-    fmt.Printf("\nNode data: %s\n", data)
+    fmt.Println(string(body))
+
 /*
     switch os.Args[1] {
     case "push":
