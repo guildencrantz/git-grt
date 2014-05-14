@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/davemeehan/Neo4j-GO"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -35,50 +36,49 @@ func getCreds() (string, string) {
 func main() {
 	// Fail if not enough parameters
 	if len(os.Args) < 2 {
-		log.Printf("I don't know what you want me to do.")
-		return
+		log.Fatal("I don't know what you want me to do.")
 	}
 
 	user, pass := getCreds()
 
-	neo, err := neo4j.NewNeo4j("http://gerrit.dev.returnpath.net/a/changes", user, pass)
-	if err != nil {
-		// log.Printf("%v\n", err)
-		return
-	}
 
-	node := map[string]string{
-		"q": "status:open",
-	}
+	var client http.Client
 
-	data, _ := neo.CreateNode(node)
-	fmt.Printf("\nNode data: %s\n", data)
-	switch os.Args[1] {
-	case "branch":
-		Branch()
-	case "push":
-		fallthrough
-	case "pull":
-		// Check for changeset in params yet
-		// If not, do push and get changeset back
-		//
-		fallthrough
-	default:
-		fmt.Printf("You have chosen to \"%s\".\n", os.Args[1])
-		break
-	}
-}
-
-func _get_current_branch() string {
-	cmd := exec.Command("git", "symbolic-ref", "--short", "HEAD")
-
-	var usrout bytes.Buffer
-	cmd.Stdout = &usrout
-	err := cmd.Run()
+	resp, err := client.Get("http://gerrit.dev.returnpath.net/a/changes/?q=status:open")
 	if err != nil {
 		log.Fatal(err)
 	}
-	out := strings.TrimSpace(usrout.String())
 
-	return out
+	req, err := http.NewRequest("GET", "http://gerrit.dev.returnpath.net/a/changes/?q=status:open", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.SetBasicAuth(user, pass)
+
+	resp, err = client.Do(req)
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(string(body))
+
+	/*
+	   switch os.Args[1] {
+	   case "push":
+
+	       return 0
+	   case "pull":
+	       // Check for changeset in params yet
+	       // If not, do push and get changeset back
+	       //
+	       fallthrough
+	   default:
+	       fmt.Printf("You have chosen to \"%s\".\n", os.Args[1])
+	       break
+	   }
+	*/
 }
