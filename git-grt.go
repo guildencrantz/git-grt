@@ -70,19 +70,54 @@ func main() {
 
 	fmt.Println(string(body))
 
-	/*
-	   switch os.Args[1] {
-	   case "push":
+	switch os.Args[1] {
+	case "branch":
+		Branch()
+	case "push":
+		fallthrough
+	case "pull":
+		// Check for changeset in params yet
+		// If not, do push and get changeset back
+		//
+		fallthrough
+	default:
+		fmt.Printf("You have chosen to \"%s\".\n", os.Args[1])
+		break
+	}
+}
 
-	       return 0
-	   case "pull":
-	       // Check for changeset in params yet
-	       // If not, do push and get changeset back
-	       //
-	       fallthrough
-	   default:
-	       fmt.Printf("You have chosen to \"%s\".\n", os.Args[1])
-	       break
-	   }
-	*/
+func execCommand(command []string) (string, error) {
+	cmd := exec.Command(command[0], command[0:]...)
+
+	var usrout bytes.Buffer
+	cmd.Stdout = &usrout
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+		return "", err
+	}
+	out := strings.TrimSpace(usrout.String())
+
+	return out, nil
+}
+
+func getCurrentBranch() (string, error) {
+	return execCommand([]string{
+		"git",
+		"symbolic-ref",
+		"--short",
+		"HEAD",
+	})
+}
+
+func setConfigValue(name string, value string) error {
+	_, err := execCommand([]string{
+		"git",
+		"config",
+		"set",
+		name,
+		value,
+	})
+
+	return err
 }

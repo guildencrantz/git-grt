@@ -1,38 +1,61 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 )
 
 const (
 	endpoint = "changes"
 )
 
-type ChangeInfo struct {
-	project string
-	subject string
-	branch  string
-	topic   string
-	status  string
-}
-
 func Branch() {
-	var changeInfo ChangeInfo
-	reader := bufio.NewReader(os.Stdin)
-
-	proposed_project := "CALCULATED PROJECT NAME"
-	fmt.Printf("project [%s]: ", proposed_project)
-	line, err := reader.ReadString('\n')
-	changeInfo.project = strings.TrimSpace(line)
-	if err != nil {
-		panic("There was an issue reading the project name: " + err.Error())
-	}
-	if len(changeInfo.project) == 0 {
-		changeInfo.project = proposed_project
-	}
-
-	fmt.Printf(changeInfo.project)
+	id := createGerritBranch()
+	addChangeIdToGitconfig(id)
 }
+
+func addChangeIdToGitconfig(id string) {
+	branch, _ := getCurrentBranch()
+	name := fmt.Sprintf("branch.%s.change-id", branch)
+	setConfigValue(name, id)
+}
+
+func createGerritBranch() string {
+	return "bob"
+}
+/*
+	changeInfo := struct {
+		project string
+		subject string
+		branch  string
+		topic   string
+		status  string
+	}{
+		status: "DRAFT",
+	}
+
+	resp := struct {
+		kind string
+		id string
+		project string
+		branch string
+		topic string
+		change_id string
+		subject string
+		status string
+		created string
+		updated string
+		mergeable int
+		insertions int
+		deletions int
+		_sortkey string
+		_number int
+		owner struct {
+			name string
+		}
+	}{}
+
+	// Here we need to post the payload to a url. Need to get the napping session from git-grt to do this.
+
+	return resp.id
+}
+*/
