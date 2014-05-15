@@ -30,9 +30,8 @@ func main() {
 
 	resp, err = client.Do(req)
 
-    user := getConfigValue("gerrit.user")
-	fmt.Println(user)
-    pass := getConfigValue("gerrit.pass")
+	user := getConfigValue("gerrit.user")
+	pass := getConfigValue("gerrit.pass")
 
 	auth := GetAuthorization(user, pass, resp)
 	digest := GetAuthString(auth, req.URL, req.Method, 1)
@@ -67,7 +66,7 @@ func main() {
 
 func execCommand(command []string) string {
 	cmd := exec.Command(command[0], command[0:]...)
-    out, err := cmd.CombinedOutput()
+	out, err := cmd.CombinedOutput()
 
 	if err != nil {
 		log.Fatal(fmt.Sprint(err) + ": " + string(out))
@@ -87,15 +86,15 @@ func getCurrentBranch() string {
 }
 
 func getConfigValue(name string) string {
-    name = "\"" + name + "\"" 
-    val := execCommand([]string{
-        "git",
-        "config",
-        "--get",
-        name,
-    })
+	name = "\"" + name + "\""
+	val := execCommand([]string{
+		"git",
+		"config",
+		"--get",
+		name,
+	})
 
-    return val
+	return val
 }
 
 func setConfigValue(name, value string) {

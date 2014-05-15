@@ -22,6 +22,7 @@ func addChangeIdToGitconfig(id string) {
 func createGerritBranch() string {
 	return "bob"
 }
+
 /*
 	changeInfo := struct {
 		project string
