@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,7 +28,9 @@ func NewGrtCmd() grtCmd {
 	}
 	cmd.body = ""
 
-	resp, err := client.Get(this.protocol + "://" + this.domain + this.endpoint + getQry)
+	var client http.Client
+
+	resp, err := client.Get(cmd.protocol + "://" + cmd.domain + cmd.endpoint)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,7 +75,7 @@ func (this grtCmd) Call() string {
 		log.Fatal(err)
 	}
 
-	req.Header.Add("Authorization", digest)
+	req.Header.Add("Authorization", this.digest)
 
 	resp, err = client.Do(req)
 
