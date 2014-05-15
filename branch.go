@@ -14,7 +14,7 @@ func Branch() {
 }
 
 func addChangeIdToGitconfig(id string) {
-	branch, _ := getCurrentBranch()
+	branch := getCurrentBranch()
 	name := fmt.Sprintf("branch.%s.change-id", branch)
 	setConfigValue(name, id)
 }

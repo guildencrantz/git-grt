@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,35 +10,11 @@ import (
 	"strings"
 )
 
-func getCreds() (string, string) {
-	cmd := exec.Command("git", "config", "--get", "gerrit.user")
-	var usrout bytes.Buffer
-	cmd.Stdout = &usrout
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	user := strings.TrimSpace(usrout.String())
-
-	cmd = exec.Command("git", "config", "--get", "gerrit.pass")
-	var pwdout bytes.Buffer
-	cmd.Stdout = &pwdout
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	pass := strings.TrimSpace(pwdout.String())
-
-	return user, pass
-}
-
 func main() {
 	// Fail if not enough parameters
 	if len(os.Args) < 2 {
 		log.Fatal("I don't know what you want me to do.")
 	}
-
-	user, pass := getCreds()
 
 	var client http.Client
 
@@ -54,6 +29,10 @@ func main() {
 	}
 
 	resp, err = client.Do(req)
+
+    user := getConfigValue("gerrit.user")
+	fmt.Println(user)
+    pass := getConfigValue("gerrit.pass")
 
 	auth := GetAuthorization(user, pass, resp)
 	digest := GetAuthString(auth, req.URL, req.Method, 1)
@@ -86,22 +65,19 @@ func main() {
 	}
 }
 
-func execCommand(command []string) (string, error) {
+func execCommand(command []string) string {
 	cmd := exec.Command(command[0], command[0:]...)
+    out, err := cmd.CombinedOutput()
 
-	var usrout bytes.Buffer
-	cmd.Stdout = &usrout
-	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
-		return "", err
+		log.Fatal(fmt.Sprint(err) + ": " + string(out))
 	}
-	out := strings.TrimSpace(usrout.String())
+	output := strings.TrimSpace(string(out))
 
-	return out, nil
+	return output
 }
 
-func getCurrentBranch() (string, error) {
+func getCurrentBranch() string {
 	return execCommand([]string{
 		"git",
 		"symbolic-ref",
@@ -110,14 +86,24 @@ func getCurrentBranch() (string, error) {
 	})
 }
 
-func setConfigValue(name string, value string) error {
-	_, err := execCommand([]string{
+func getConfigValue(name string) string {
+    name = "\"" + name + "\"" 
+    val := execCommand([]string{
+        "git",
+        "config",
+        "--get",
+        name,
+    })
+
+    return val
+}
+
+func setConfigValue(name, value string) {
+	execCommand([]string{
 		"git",
 		"config",
 		"set",
 		name,
 		value,
 	})
-
-	return err
 }
