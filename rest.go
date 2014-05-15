@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -76,15 +75,12 @@ func (this *grtCmd) Call() string {
 		log.Fatal(err)
 	}
 
+	req.Header.Add("Authorization", this.digest)
+
 	resp, err = client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(this.digest)
-	req.Header.Add("Authorization", this.digest)
-
-	resp, err = client.Do(req)
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)

@@ -21,11 +21,9 @@ func GetAuthorization(username, password string, resp *http.Response) *Authoriza
 	header := resp.Header.Get("www-authenticate")
 	parts := strings.SplitN(header, " ", 2)
 	parts = strings.Split(parts[1], ", ")
-	fmt.Println("Parts: ", parts)
 	opts := make(map[string]string)
 
 	for _, part := range parts {
-		fmt.Println("Part: ", part)
 		vals := strings.SplitN(part, "=", 2)
 		key := vals[0]
 		val := strings.Trim(vals[1], "\",")
@@ -77,15 +75,3 @@ func GetAuthString(auth *Authorization, url *url.URL, method string, nc int) str
 
 	return "Digest " + base
 }
-
-/*
-func main() {
-	auth := Authorization{
-		"Joe", "Schmoe", "RETS Server",
-		"0decbedc0f7828a0f8a0f0ea4a2107e3", "auth",
-		"a0531450f6a92cda6b30ae8e4de1cd2b", "",
-	}
-	myURL := url.URL{"http", "", nil, "www.dis.com:6103", "/rets/login", "", ""}
-	fmt.Println(GetAuthString(&auth, &myURL, "POST", 3))
-}
-*/
