@@ -14,9 +14,9 @@ func Branch() {
 }
 
 func addChangeIdToGitconfig(id string) {
-	branch := getCurrentBranch()
+	branch := GetCurrentBranch()
 	name := fmt.Sprintf("branch.%s.change-id", branch)
-	setConfigValue(name, id)
+	SetConfigValue(name, id)
 }
 
 func createGerritBranch() string {
