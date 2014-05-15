@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type grtCmd struct {
@@ -85,5 +86,8 @@ func (this grtCmd) Call() string {
 		log.Fatal(err)
 	}
 
-	return string(body)
+	val := string(body)
+	val = val[strings.Index(string(val), "\n"):]
+
+	return val
 }
