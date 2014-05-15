@@ -41,7 +41,7 @@ func SetConfigValue(name, value string) {
 	execCommand([]string{
 		"git",
 		"config",
-		"set",
+		"--add",
 		name,
 		value,
 	})

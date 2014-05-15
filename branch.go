@@ -1,16 +1,34 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
-const (
-	endpoint = "changes"
-)
+type ChangeInfo struct {
+	kind string
+	id string
+	project string
+	branch string
+	topic string
+	change_id string
+	subject string
+	status string
+	created string
+	updated string
+	mergeable int
+	insertions int
+	deletions int
+	_sortkey string
+	_number int
+	owner struct {
+		name string
+	}
+}
 
 func Branch() {
-	id := createGerritBranch()
-	addChangeIdToGitconfig(id)
+	changeInfo := createGerritBranch()
+	addChangeIdToGitconfig(changeInfo.id)
 }
 
 func addChangeIdToGitconfig(id string) {
@@ -19,44 +37,46 @@ func addChangeIdToGitconfig(id string) {
 	SetConfigValue(name, id)
 }
 
-func createGerritBranch() string {
-	return "bob"
-}
 
-/*
-	changeInfo := struct {
-		project string
-		subject string
-		branch  string
-		topic   string
-		status  string
-	}{
+func createGerritBranch() *ChangeInfo {
+	defaultRequestInfo := ChangeInfo {
 		status: "DRAFT",
 	}
+	jsonBytes, _ := json.Marshal(defaultRequestInfo)
 
-	resp := struct {
-		kind string
-		id string
-		project string
-		branch string
-		topic string
-		change_id string
-		subject string
-		status string
-		created string
-		updated string
-		mergeable int
-		insertions int
-		deletions int
-		_sortkey string
-		_number int
-		owner struct {
-			name string
+	rest := NewGrtCmd("POST", "/a/changes/")
+	rest.body = string(jsonBytes)
+
+	resp := rest.Call()
+
+	/*
+	resp := `{
+		"kind": "gerritcodereview#change",
+		"id": "myProject~master~I8473b95934b5732ac55d26311a706c9c2bde9941",
+		"project": "myProject",
+		"branch": "master",
+		"topic": "create-change-in-browser",
+		"change_id": "I8473b95934b5732ac55d26311a706c9c2bde9941",
+		"subject": "Let's support 100% Gerrit workflow direct in browser",
+		"status": "DRAFT",
+		"created": "2014-05-05 07:15:44.639000000",
+		"updated": "2014-05-05 07:15:44.639000000",
+		"mergeable": true,
+		"insertions": 0,
+		"deletions": 0,
+		"_sortkey": "002cbc25000004e5",
+		"_number": 4711,
+		"owner": {
+			"name": "John Doe"
 		}
-	}{}
+	}`
+	*/
 
-	// Here we need to post the payload to a url. Need to get the napping session from git-grt to do this.
+	fmt.Println(resp)
 
-	return resp.id
+	changeInfo := ChangeInfo{}
+	json.Unmarshal([]byte(resp), &changeInfo)
+
+	return &changeInfo
 }
-*/
+

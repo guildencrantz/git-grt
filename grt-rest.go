@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,26 +18,25 @@ type grtCmd struct {
 	body     string
 }
 
-func NewGrtCmd() grtCmd {
-	var cmd grtCmd
-
-	cmd.method = "GET"
-	cmd.protocol = "http"
-	cmd.domain = "gerrit.dev.returnpath.net"
-	cmd.endpoint = "/a/changes/"
-	cmd.getVars = map[string]string{
-		"q": "status:open",
+func NewGrtCmd(method, endpoint string) grtCmd {
+	cmd := grtCmd {
+		method: method,
+		protocol: "http",
+		domain: "gerrit.dev.returnpath.net",
+		endpoint: endpoint,
 	}
-	cmd.body = ""
 
+	return cmd.SetDigest()
+}
+
+func (this grtCmd) GetDigest() string {
 	var client http.Client
 
-	resp, err := client.Get(cmd.protocol + "://" + cmd.domain + cmd.endpoint)
+	resp, err := client.Get(this.protocol + "://" + this.domain + this.endpoint)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	req, err := http.NewRequest(cmd.method, cmd.protocol+"://"+cmd.domain+cmd.endpoint, nil)
+	req, err := http.NewRequest(this.method, this.protocol+"://"+this.domain+this.endpoint, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,9 +44,14 @@ func NewGrtCmd() grtCmd {
 	user := GetConfigValue("gerrit.user")
 	pass := GetConfigValue("gerrit.pass")
 	auth := GetAuthorization(user, pass, resp)
-	cmd.digest = GetAuthString(auth, req.URL, req.Method, 1)
 
-	return cmd
+	return GetAuthString(auth, req.URL, req.Method, 1)
+}
+
+func (this grtCmd) SetDigest() grtCmd {
+	this.digest = this.GetDigest()
+
+	return this
 }
 
 func (this grtCmd) Call() string {
@@ -76,6 +81,7 @@ func (this grtCmd) Call() string {
 		log.Fatal(err)
 	}
 
+	fmt.Println(this.digest)
 	req.Header.Add("Authorization", this.digest)
 
 	resp, err = client.Do(req)
