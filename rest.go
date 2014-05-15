@@ -14,6 +14,7 @@ type grtCmd struct {
 	domain   string
 	endpoint string
 	getVars  map[string]string
+	rawForm  string
 	body     string
 }
 
@@ -54,23 +55,25 @@ func (this *grtCmd) SetDigest() {
 }
 
 func (this *grtCmd) Call() string {
+	var form string
+	switch {
+	case this.rawForm != "":
+		form = "?" + this.rawForm
+	case len(this.getVars) > 0:
+		form = "?"
+		for k,v := range this.getVars {
+			form += k + "=" + v + "&"
+		}
+		form = form[:len(form)-1] // Trim trailing ampersand
+	}
+
 	var client http.Client
-	getQry := ""
-
-	for k, v := range this.getVars {
-		getQry += k + "=" + v + "&"
-	}
-
-	if len(getQry) > 0 {
-		getQry = "?" + getQry[:len(getQry)-1]
-	}
-
-	resp, err := client.Get(this.protocol + "://" + this.domain + this.endpoint + getQry)
+	resp, err := client.Get(this.protocol + "://" + this.domain + this.endpoint + form)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	req, err := http.NewRequest(this.method, this.protocol+"://"+this.domain+this.endpoint+getQry, nil)
+	req, err := http.NewRequest(this.method, this.protocol+"://"+this.domain+this.endpoint+form, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
