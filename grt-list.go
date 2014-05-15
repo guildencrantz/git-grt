@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
 type listFormatter struct {
@@ -12,16 +13,44 @@ type listFormatter struct {
 
 func listCmd(args []string) int {
 	if len(args) <= 0 {
-		listCmdDefault()
+		fmt.Println("")
+		listCmdExec("outgoing")
+		listCmdExec("incoming")
+		listCmdExec("closed")
 		return 0
+	} else {
+		fmt.Println("")
+		for len(args) > 0 {
+			listCmdExec(args[0][2:])
+			args = args[1:]
+		}
 	}
 	return 1
 }
 
-func listCmdDefault() {
+func listCmdExec(op string) {
 	cmd := NewGrtCmd("GET", change_endpoint)
-	cmd.getVars = map[string]string{
-		"q": "is:open+owner:self",
+	switch op {
+	case "outgoing":
+		fmt.Println("Outgoing reviews (--outgoing):")
+		cmd.getVars = map[string]string{
+			"q": "is:open+owner:self",
+		}
+
+	case "incoming":
+		fmt.Println("Incoming reviews (--incoming):")
+		cmd.getVars = map[string]string{
+			"q": "is:open+reviewer:self+-owner:self",
+		}
+
+	case "closed":
+		fmt.Println("Incoming reviews (--closed):")
+		cmd.getVars = map[string]string{
+			"q": "is:closed+owner:self+limit:15&o=LABELS",
+		}
+
+	default:
+		log.Fatal("--" + op + " is an invalid option.")
 	}
 
 	resp := cmd.Call()
@@ -31,6 +60,7 @@ func listCmdDefault() {
 
 	lf := analyzeSizes(list)
 	printDefaultList(list, lf)
+	fmt.Println("")
 }
 
 func analyzeSizes(list []ChangeInfo) listFormatter {
