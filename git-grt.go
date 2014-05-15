@@ -29,7 +29,6 @@ func main() {
 	}
 
 	resp, err = client.Do(req)
-
 	user := getConfigValue("gerrit.user")
 	pass := getConfigValue("gerrit.pass")
 
@@ -65,7 +64,7 @@ func main() {
 }
 
 func execCommand(command []string) string {
-	cmd := exec.Command(command[0], command[0:]...)
+	cmd := exec.Command(command[0], command[1:]...)
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
@@ -86,14 +85,11 @@ func getCurrentBranch() string {
 }
 
 func getConfigValue(name string) string {
-	name = "\"" + name + "\""
 	val := execCommand([]string{
 		"git",
 		"config",
-		"--get",
 		name,
 	})
-
 	return val
 }
 
