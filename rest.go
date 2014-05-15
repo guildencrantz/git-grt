@@ -19,10 +19,10 @@ type grtCmd struct {
 }
 
 func NewGrtCmd(method, endpoint string) grtCmd {
-	cmd := grtCmd {
-		method: method,
+	cmd := grtCmd{
+		method:   method,
 		protocol: "http",
-		domain: "gerrit.dev.returnpath.net",
+		domain:   "gerrit.dev.returnpath.net",
 		endpoint: endpoint,
 	}
 

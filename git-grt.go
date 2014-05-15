@@ -13,6 +13,8 @@ func main() {
 	}
 
 	switch os.Args[1] {
+	case "list":
+		listCmd(os.Args[2:])
 	case "branch":
 		Branch()
 	case "push":
