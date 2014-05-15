@@ -75,14 +75,12 @@ func (this *grtCmd) Call() string {
 		log.Fatal(err)
 	}
 
+	req.Header.Add("Authorization", this.digest)
+
 	resp, err = client.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	req.Header.Add("Authorization", this.digest)
-
-	resp, err = client.Do(req)
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
