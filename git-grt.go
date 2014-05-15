@@ -41,7 +41,6 @@ func main() {
 
 	user, pass := getCreds()
 
-
 	var client http.Client
 
 	resp, err := client.Get("http://gerrit.dev.returnpath.net/a/changes/?q=status:open")
@@ -54,7 +53,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	req.SetBasicAuth(user, pass)
+	resp, err = client.Do(req)
+
+	auth := GetAuthorization(user, pass, resp)
+	digest := GetAuthString(auth, req.URL, req.Method, 1)
+	fmt.Println(digest)
+	req.Header.Add("Authorization", digest)
 
 	resp, err = client.Do(req)
 
