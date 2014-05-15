@@ -5,24 +5,6 @@ import (
     "encoding/json"
 )
 
-type listChangeInfo struct {
-	Kind       string
-	Id         string
-	Project    string
-	Branch     string
-	Change_id  string
-	Subject    string
-	Status     string
-	Created    string
-	Updated    string
-	Mergeable  int
-	Sortkey   string `json:"_sortkey"`
-	Number    int    `json:"_number"`
-	Owner      struct {
-		Name string
-	}
-}
-
 func listCmd(args []string) int {
 	if len(args) <= 0 {
 		listCmdDefault()
@@ -32,10 +14,10 @@ func listCmd(args []string) int {
 }
 
 func listCmdDefault() {
-	cmd := NewGrtCmd("GET", "/a/changes/")
+	cmd := NewGrtCmd("GET", change_endpoint)
 	resp := cmd.Call()
 
-    var list []listChangeInfo
+    var list []ChangeInfo
     json.Unmarshal([]byte(resp), &list)
 
     for i := 0; i < len(list); i++ {
