@@ -18,18 +18,20 @@ type grtCmd struct {
 	body     string
 }
 
-func NewGrtCmd(method, endpoint string) grtCmd {
-	cmd := grtCmd{
+func NewGrtCmd(method, endpoint string) *grtCmd {
+	cmd := &grtCmd{
 		method:   method,
 		protocol: "http",
 		domain:   "gerrit.dev.returnpath.net",
 		endpoint: endpoint,
 	}
 
-	return cmd.SetDigest()
+	cmd.SetDigest()
+
+	return cmd
 }
 
-func (this grtCmd) GetDigest() string {
+func (this *grtCmd) GetDigest() string {
 	var client http.Client
 
 	resp, err := client.Get(this.protocol + "://" + this.domain + this.endpoint)
@@ -48,13 +50,11 @@ func (this grtCmd) GetDigest() string {
 	return GetAuthString(auth, req.URL, req.Method, 1)
 }
 
-func (this grtCmd) SetDigest() grtCmd {
+func (this *grtCmd) SetDigest() {
 	this.digest = this.GetDigest()
-
-	return this
 }
 
-func (this grtCmd) Call() string {
+func (this *grtCmd) Call() string {
 	var client http.Client
 	getQry := ""
 
