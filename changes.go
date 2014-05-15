@@ -4,7 +4,6 @@ const (
 	change_endpoint = "/a/changes/"
 )
 
-
 type ChangeInfo struct {
 	Kind       string
 	Id         string
@@ -25,4 +24,3 @@ type ChangeInfo struct {
 		Name string
 	}
 }
-
