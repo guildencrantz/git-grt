@@ -5,10 +5,6 @@ import (
 	"fmt"
 )
 
-const (
-	endpoint = "changes"
-)
-
 type ChangeInfo struct {
 	kind string
 	id string
@@ -31,8 +27,8 @@ type ChangeInfo struct {
 }
 
 func Branch() {
-	id := createGerritBranch()
-	addChangeIdToGitconfig(id)
+	changeInfo := createGerritBranch()
+	addChangeIdToGitconfig(changeInfo.id)
 }
 
 func addChangeIdToGitconfig(id string) {
@@ -43,15 +39,17 @@ func addChangeIdToGitconfig(id string) {
 
 
 func createGerritBranch() *ChangeInfo {
-
-	/*
-	defaultRequestInfo = ChangeInfo{
+	defaultRequestInfo := ChangeInfo {
 		status: "DRAFT",
 	}
+	jsonBytes, _ := json.Marshal(defaultRequestInfo)
 
-	// Pass defaultRequestInfo to rest client
-	*/
+	rest := NewGrtCmd("POST", "/a/changes/")
+	rest.body = string(jsonBytes)
 
+	resp := rest.Call()
+
+	/*
 	resp := `{
 		"kind": "gerritcodereview#change",
 		"id": "myProject~master~I8473b95934b5732ac55d26311a706c9c2bde9941",
@@ -72,6 +70,9 @@ func createGerritBranch() *ChangeInfo {
 			"name": "John Doe"
 		}
 	}`
+	*/
+
+	fmt.Println(resp)
 
 	changeInfo := ChangeInfo{}
 	json.Unmarshal([]byte(resp), &changeInfo)
