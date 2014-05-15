@@ -8,6 +8,7 @@ import (
 )
 
 type grtCmd struct {
+	digest   string
 	method   string
 	protocol string
 	domain   string
@@ -28,6 +29,21 @@ func NewGrtCmd() grtCmd {
 	}
 	cmd.body = ""
 
+	resp, err := client.Get(this.protocol + "://" + this.domain + this.endpoint + getQry)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req, err := http.NewRequest(cmd.method, cmd.protocol+"://"+cmd.domain+cmd.endpoint, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	user := GetConfigValue("gerrit.user")
+	pass := GetConfigValue("gerrit.pass")
+	auth := GetAuthorization(user, pass, resp)
+	cmd.digest = GetAuthString(auth, req.URL, req.Method, 1)
+
 	return cmd
 }
 
@@ -39,14 +55,16 @@ func (this grtCmd) Call() string {
 		getQry += k + "=" + v + "&"
 	}
 
-	getQry = getQry[:len(getQry)-1]
+	if len(getQry) > 0 {
+		getQry = "?" + getQry[:len(getQry)-1]
+	}
 
 	resp, err := client.Get(this.protocol + "://" + this.domain + this.endpoint + getQry)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	req, err := http.NewRequest("GET", "http://gerrit.dev.returnpath.net/a/changes/?q=status:open", nil)
+	req, err := http.NewRequest(this.method, this.protocol+"://"+this.domain+this.endpoint+getQry, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,12 +74,6 @@ func (this grtCmd) Call() string {
 		log.Fatal(err)
 	}
 
-	user := GetConfigValue("gerrit.user")
-	pass := GetConfigValue("gerrit.pass")
-
-	auth := GetAuthorization(user, pass, resp)
-	digest := GetAuthString(auth, req.URL, req.Method, 1)
-	fmt.Println(digest)
 	req.Header.Add("Authorization", digest)
 
 	resp, err = client.Do(req)
