@@ -1,5 +1,9 @@
 package main
 
+import (
+	"encoding/json"
+)
+
 const (
 	change_endpoint = "/a/changes/"
 )
@@ -23,4 +27,9 @@ type ChangeInfo struct {
 	Owner      struct {
 		Name string
 	}
+}
+
+func (changeInfo ChangeInfo) String() string {
+	ret, _ := json.Marshal(changeInfo)
+	return string(ret)
 }
