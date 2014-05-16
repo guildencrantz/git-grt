@@ -90,6 +90,8 @@ func (this *grtCmd) Call() string {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// TODO: Need to check the return status.
+	// If, for example, you get Unauthorized the slice below will be out of bounds.
 
 	val := string(body)
 	val = val[strings.Index(string(val), "\n"):]

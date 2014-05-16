@@ -7,7 +7,18 @@ import (
 	"strings"
 )
 
-func execCommand(command []string) string {
+func execCommand(args ...string) (string, error) {
+	cmd := exec.Command(args[0], args[1:]...)
+	out, err := cmd.CombinedOutput()
+	return string(out), err
+}
+
+func execGit(args ...string) (string, error) {
+	command := append([]string{"git"}, args...)
+	return execCommand(command...)
+}
+
+func execCommandLogFatal(command []string) string {
 	cmd := exec.Command(command[0], command[1:]...)
 	out, err := cmd.CombinedOutput()
 
@@ -20,7 +31,7 @@ func execCommand(command []string) string {
 }
 
 func GetCurrentBranch() string {
-	return execCommand([]string{
+	return execCommandLogFatal([]string{
 		"git",
 		"symbolic-ref",
 		"--short",
@@ -29,16 +40,15 @@ func GetCurrentBranch() string {
 }
 
 func GetConfigValue(name string) string {
-	val := execCommand([]string{
-		"git",
-		"config",
-		name,
-	})
-	return val
+	val, err := execGit("config", name)
+	if err != nil {
+		log.Fatal("Unable to retrieve git config '", name, "': Please set it and try again.")
+	}
+	return strings.TrimSpace(val)
 }
 
 func SetConfigValue(name, value string) {
-	execCommand([]string{
+	execCommandLogFatal([]string{
 		"git",
 		"config",
 		"--add",
