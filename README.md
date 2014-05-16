@@ -22,7 +22,7 @@ Yeah, we really should write some real documentation. Even a --help. For now:
 * `git grt track _id_`
 * `git grt fetch`
 
-Id can be found in `git grt list`, or in the gerrit http URI.
+`_id_` can be found in `git grt list`, or in the gerrit http URI.
 
 ## History
 
