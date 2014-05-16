@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	changes_endpoint   = "/a/changes/"
+	change_endpoint  = "/a/changes/%s/detail"
+	changes_endpoint = "/a/changes/"
 )
 
 type ChangeInfo struct {
@@ -60,3 +61,29 @@ func (revisionInfo RevisionInfo) String() string {
 	return string(ret)
 }
 
+type ChangeDetail struct {
+	Kind       string
+	Id         string
+	Project    string
+	Branch     string
+	ChangeId   string `json:"change_id"`
+	Subject    string
+	Status     string
+	Created    string
+	Updated    string
+	Mergeable  bool
+	Insertions int
+	Deletions  int
+	Sortkey    string `json:"_sortkey"`
+	Number     int    `json:"_number"`
+	Owner      struct {
+		Name string
+	}
+	Labels struct {
+		CodeReview struct {
+			All []struct {
+				Value int
+			}
+		} `json:"Code-Review"`
+	}
+}

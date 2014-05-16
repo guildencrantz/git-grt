@@ -13,6 +13,8 @@ func main() {
 	}
 
 	switch os.Args[1] {
+	case "detail":
+		detailCmd(os.Args[2])
 	case "list":
 		listCmd(os.Args[2:])
 	case "fetch":

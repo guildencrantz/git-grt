@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 )
 
@@ -30,29 +31,30 @@ func listCmd(args []string) int {
 }
 
 func listCmdExec(op string) {
-	list := getChanges(op)
+	headers, list := getChanges(op)
 	lf := analyzeSizes(list)
-	printDefaultList(list, lf)
+	printDefaultList(headers, list, lf)
 	fmt.Println("")
 }
 
-func getChanges(op string) []ChangeInfo {
+func getChanges(op string) (string, []ChangeInfo) {
 	cmd := NewGrtCmd("GET", changes_endpoint)
+	var headers string
 	switch op {
 	case "outgoing":
-		fmt.Println("Outgoing reviews (--outgoing):")
+		headers = "Outgoing reviews (--outgoing):"
 		cmd.getVars = map[string]string{
 			"q": "is:open+owner:self",
 		}
 
 	case "incoming":
-		fmt.Println("Incoming reviews (--incoming):")
+		headers = "Incoming reviews (--incoming):"
 		cmd.getVars = map[string]string{
 			"q": "is:open+reviewer:self+-owner:self",
 		}
 
 	case "closed":
-		fmt.Println("Incoming reviews (--closed):")
+		headers = "Incoming reviews (--closed):"
 		cmd.getVars = map[string]string{
 			"q": "is:closed+owner:self+limit:15&o=LABELS",
 		}
@@ -66,7 +68,7 @@ func getChanges(op string) []ChangeInfo {
 	var list []ChangeInfo
 	json.Unmarshal([]byte(resp), &list)
 
-	return list
+	return headers, list
 }
 
 func analyzeSizes(list []ChangeInfo) listFormatter {
@@ -87,11 +89,13 @@ func analyzeSizes(list []ChangeInfo) listFormatter {
 	return lf
 }
 
-func printDefaultList(list []ChangeInfo, formatter listFormatter) {
+func printDefaultList(headers string, list []ChangeInfo, formatter listFormatter) {
 	idHeader := "ID:  "
-	subjHeader := "Subject:    "
-	projHeader := "Project:   "
-	mergeHeader := "Merge Ready:"
+	subjHeader := "Subject:"
+	projHeader := "Project:"
+	mergeHeader := "Review:  "
+
+	fmt.Println(headers)
 
 	for i := len(subjHeader); i < formatter.subjSize; i++ {
 		subjHeader += " "
@@ -112,6 +116,33 @@ func printDefaultList(list []ChangeInfo, formatter listFormatter) {
 			list[i].Project += " "
 		}
 
-		fmt.Println(strconv.Itoa(list[i].Number) + "\t" + list[i].Subject + "\t" + list[i].Project + "\t" + strconv.FormatBool(list[i].Mergeable))
+		cr := getCodeReview(strconv.Itoa(list[i].Number))
+
+		fmt.Println(strconv.Itoa(list[i].Number) + "\t" + list[i].Subject + "\t" + list[i].Project + "\t" + strconv.Itoa(cr))
 	}
+}
+
+func getCodeReview(id string) int {
+	crh := 0
+	crl := 0
+
+	details := getChangeDetails(id)
+	for i := 0; i < len(details.Labels.CodeReview.All); i++ {
+		if details.Labels.CodeReview.All[i].Value < crl {
+			crl = details.Labels.CodeReview.All[i].Value
+		}
+
+		if crh < details.Labels.CodeReview.All[i].Value {
+			crh = details.Labels.CodeReview.All[i].Value
+		}
+	}
+
+	var cr int
+	if math.Abs(float64(crl)) >= float64(crh) {
+		cr = crl
+	} else {
+		cr = crh
+	}
+
+	return cr
 }
