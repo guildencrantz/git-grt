@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 )
 
 type listFormatter struct {
@@ -29,7 +30,14 @@ func listCmd(args []string) int {
 }
 
 func listCmdExec(op string) {
-	cmd := NewGrtCmd("GET", change_endpoint)
+	list := getChanges(op)
+	lf := analyzeSizes(list)
+	printDefaultList(list, lf)
+	fmt.Println("")
+}
+
+func getChanges(op string) []ChangeInfo {
+	cmd := NewGrtCmd("GET", changes_endpoint)
 	switch op {
 	case "outgoing":
 		fmt.Println("Outgoing reviews (--outgoing):")
@@ -58,9 +66,7 @@ func listCmdExec(op string) {
 	var list []ChangeInfo
 	json.Unmarshal([]byte(resp), &list)
 
-	lf := analyzeSizes(list)
-	printDefaultList(list, lf)
-	fmt.Println("")
+	return list
 }
 
 func analyzeSizes(list []ChangeInfo) listFormatter {
@@ -82,8 +88,9 @@ func analyzeSizes(list []ChangeInfo) listFormatter {
 }
 
 func printDefaultList(list []ChangeInfo, formatter listFormatter) {
-	subjHeader := "Subject:"
-	projHeader := "Project:"
+	idHeader := "ID:  "
+	subjHeader := "Subject:    "
+	projHeader := "Project:   "
 	mergeHeader := "Merge Ready:"
 
 	for i := len(subjHeader); i < formatter.subjSize; i++ {
@@ -94,7 +101,7 @@ func printDefaultList(list []ChangeInfo, formatter listFormatter) {
 		projHeader += " "
 	}
 
-	fmt.Println(subjHeader + "\t" + projHeader + "\t" + mergeHeader)
+	fmt.Println(idHeader + "\t" + subjHeader + "\t" + projHeader + "\t" + mergeHeader)
 
 	for i := 0; i < len(list); i++ {
 		for j := len(list[i].Subject); j < formatter.subjSize; j++ {
@@ -105,13 +112,6 @@ func printDefaultList(list []ChangeInfo, formatter listFormatter) {
 			list[i].Project += " "
 		}
 
-		var mergeable string
-		if list[i].Mergeable > 0 {
-			mergeable = "true"
-		} else {
-			mergeable = "false"
-		}
-
-		fmt.Println(list[i].Subject + "\t" + list[i].Project + "\t" + mergeable)
+		fmt.Println(strconv.Itoa(list[i].Number) + "\t" + list[i].Subject + "\t" + list[i].Project + "\t" + strconv.FormatBool(list[i].Mergeable))
 	}
 }

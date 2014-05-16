@@ -61,7 +61,7 @@ func (this *grtCmd) Call() string {
 		form = "?" + this.rawForm
 	case len(this.getVars) > 0:
 		form = "?"
-		for k,v := range this.getVars {
+		for k, v := range this.getVars {
 			form += k + "=" + v + "&"
 		}
 		form = form[:len(form)-1] // Trim trailing ampersand

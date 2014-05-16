@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	change_endpoint = "/a/changes/"
+	changes_endpoint   = "/a/changes/"
 )
 
 type ChangeInfo struct {
@@ -17,7 +17,7 @@ type ChangeInfo struct {
 	Id         string
 	Insertions int
 	Kind       string
-	Mergeable  int
+	Mergeable  bool
 	Number     int `json:"_number"`
 	Owner      struct {
 		Name string

@@ -11,7 +11,7 @@ func Fetch(args []string) {
 	number := fmt.Sprintf("branch.%s.gerritnumber", GetCurrentBranch())
 
 	// The end point is: project~branch~change_id
-	cmd := NewGrtCmd("GET", change_endpoint)
+	cmd := NewGrtCmd("GET", changes_endpoint)
 
 	// I'm using the query instead of the direct changeset endpoint because then
 	// we don't have to store the gerrit id (project~branch~change_id)
@@ -54,4 +54,3 @@ func (changeInfo ChangeInfo) fetchRevisions() {
 		}
 	}
 }
-
