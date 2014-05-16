@@ -19,6 +19,8 @@ func main() {
 		listCmd(os.Args[2:])
 	case "fetch":
 		Fetch(os.Args[2:])
+	case "track":
+		Track(os.Args[2:])
 	case "push":
 		fallthrough
 	case "pull":

@@ -8,15 +8,13 @@ import (
 )
 
 func Fetch(args []string) {
-	number := fmt.Sprintf("branch.%s.gerritnumber", GetCurrentBranch())
-
 	// The end point is: project~branch~change_id
 	cmd := NewGrtCmd("GET", changes_endpoint)
 
 	// I'm using the query instead of the direct changeset endpoint because then
 	// we don't have to store the gerrit id (project~branch~change_id)
 	cmd.getVars = make(map[string]string)
-	cmd.getVars["q"] = GetConfigValue(number)
+	cmd.getVars["q"] = getTrackingNumber()
 	cmd.getVars["o"] = "ALL_REVISIONS&o=DOWNLOAD_COMMANDS"
 
 	resp := cmd.Call()
