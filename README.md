@@ -9,18 +9,20 @@ No packaged version is currently available, so you'll need to have [go installed
 
 Once go is installed just run:
 
-go get github.com/guildencrantz/git-grt
+`go get github.com/guildencrantz/git-grt`
 
-Make sure that $GOPATH/bin is in your PATH and you should be set.
+Make sure that `$GOPATH/bin` is in your `$PATH` and you should be set.
 
 ## Usage
 
 Yeah, we really should write some real documentation. Even a --help. For now:
 
-git grt list
-git grt details _id_
-git grt track _id_
-git grt fetch
+* `git grt list`
+* `git grt details _id_`
+* `git grt track _id_`
+* `git grt fetch`
+
+Id can be found in `git grt list`, or in the gerrit http URI.
 
 ## History
 
