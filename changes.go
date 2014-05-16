@@ -40,6 +40,7 @@ func (changeInfo ChangeInfo) String() string {
 type FetchInfo struct {
 	Url string
 	Ref string
+	Commands map[string]interface{}
 }
 
 func (fetchInfo FetchInfo) String() string {
@@ -58,5 +59,4 @@ func (revisionInfo RevisionInfo) String() string {
 	ret, _ := json.Marshal(revisionInfo)
 	return string(ret)
 }
-
 
